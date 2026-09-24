@@ -8,12 +8,28 @@
   var pageLoadedAt = Date.now();
 
   /* ---------- Checkout: overlay on phones/tablets, full Lemon Squeezy page on desktop ----------
-     Every buy button is a normal link to the hosted checkout, and lemon.js turns the click into
-     an overlay. On wide screens we stop lemon.js from seeing the click, so the link just opens
-     the hosted page. Capture phase on document runs before lemon.js's own button listeners. */
+     Each buy button is a normal link. Its href is the overlay link (lemon.js turns the click into
+     an overlay on narrow screens). On wide screens we (1) stop lemon.js from seeing the click and
+     (2) swap the href to data-desktop-href, so the button opens the hosted checkout page and
+     open-in-new-tab / copy-link also give the desktop URL. Only https links on our own
+     Lemon Squeezy store host are ever swapped in. */
   (function checkoutMode() {
     var desktop = window.matchMedia ? window.matchMedia("(min-width: 960px)") : null;
     if (!desktop) return;
+    var links = Array.prototype.slice.call(document.querySelectorAll("a.lemonsqueezy-button"));
+    var SAFE = /^https:\/\/[a-z0-9-]+\.lemonsqueezy\.com\/checkout\//;
+
+    function sync() {
+      links.forEach(function (a) {
+        if (!a.getAttribute("data-mobile-href")) a.setAttribute("data-mobile-href", a.getAttribute("href"));
+        var want = desktop.matches ? a.getAttribute("data-desktop-href") : a.getAttribute("data-mobile-href");
+        if (want && SAFE.test(want)) a.setAttribute("href", want);
+      });
+    }
+    sync();
+    if (desktop.addEventListener) desktop.addEventListener("change", sync);
+    else if (desktop.addListener) desktop.addListener(sync);
+
     document.addEventListener("click", function (e) {
       var a = e.target && e.target.closest ? e.target.closest("a.lemonsqueezy-button") : null;
       if (a && desktop.matches) e.stopPropagation(); // default navigation still happens
