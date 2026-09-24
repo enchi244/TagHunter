@@ -7,6 +7,19 @@
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var pageLoadedAt = Date.now();
 
+  /* ---------- Checkout: overlay on phones/tablets, full Lemon Squeezy page on desktop ----------
+     Every buy button is a normal link to the hosted checkout, and lemon.js turns the click into
+     an overlay. On wide screens we stop lemon.js from seeing the click, so the link just opens
+     the hosted page. Capture phase on document runs before lemon.js's own button listeners. */
+  (function checkoutMode() {
+    var desktop = window.matchMedia ? window.matchMedia("(min-width: 960px)") : null;
+    if (!desktop) return;
+    document.addEventListener("click", function (e) {
+      var a = e.target && e.target.closest ? e.target.closest("a.lemonsqueezy-button") : null;
+      if (a && desktop.matches) e.stopPropagation(); // default navigation still happens
+    }, true);
+  })();
+
   /* ---------- Sticky bar: hidden until the hero button scrolls out of view ---------- */
   (function stickyBar() {
     var bar = document.getElementById("sticky-bar");

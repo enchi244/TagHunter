@@ -578,6 +578,14 @@ h3 { font: 800 17px/1.3 var(--font-body); }
 .legal li + li { margin-top: 6px; }
 .legal a { color: var(--red-dark); font-weight: 700; }
 
+/* ---------- While the Lemon Squeezy checkout is open ----------
+   lemon.js adds .lemonsqueezy-open to <body>. Blur the page behind the checkout so the hero
+   text does not ghost through its overlay, and stop the page scrolling underneath. */
+body.lemonsqueezy-open { overflow: hidden; }
+body.lemonsqueezy-open main,
+body.lemonsqueezy-open .sticky,
+body.lemonsqueezy-open .footer { filter: blur(10px); }
+
 /* ---------- Containers for text-heavy pages ---------- */
 .wrap--narrow { max-width: 44rem; }
 .wrap--mid { max-width: 40rem; }
