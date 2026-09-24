@@ -180,6 +180,20 @@
     });
   })();
 
+  /* ---------- Thank-you page: deep-link to this buyer's own order ----------
+     The Lemon Squeezy confirmation button can pass ?o=[order_identifier]. If it is present AND
+     is a well-formed UUID, point the button at that order. Anything else is ignored, so the
+     button falls back to the general orders page and nothing from the URL is ever shown or
+     inserted as markup. */
+  (function orderDeepLink() {
+    var btn = document.getElementById("orders-link");
+    if (!btn) return;
+    var o = new URLSearchParams(window.location.search).get("o") || "";
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(o)) {
+      btn.href = "https://app.lemonsqueezy.com/my-orders/" + o.toLowerCase();
+    }
+  })();
+
   /* ---------- Dev safety net: shout if a checkout URL was never filled in ---------- */
   document.querySelectorAll("a.lemonsqueezy-button").forEach(function (a) {
     if (/YOUR-STORE|YOUR-PRODUCT/.test(a.getAttribute("href") || "")) {
