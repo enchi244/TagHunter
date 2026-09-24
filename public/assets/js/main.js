@@ -180,18 +180,17 @@
     });
   })();
 
-  /* ---------- Thank-you page: deep-link to this buyer's own order ----------
-     The Lemon Squeezy confirmation button can pass ?o=[order_identifier]. If it is present AND
-     is a well-formed UUID, point the button at that order. Anything else is ignored, so the
-     button falls back to the general orders page and nothing from the URL is ever shown or
-     inserted as markup. */
-  (function orderDeepLink() {
-    var btn = document.getElementById("orders-link");
-    if (!btn) return;
+  /* ---------- Thank-you page: put the order number in the support email subject ----------
+     The Lemon Squeezy confirmation button can pass ?o=[order_id]. Only a plain number or UUID is
+     accepted; anything else is ignored. The value is URL-encoded into a mailto subject and is
+     never shown on the page or inserted as markup. */
+  (function supportOrderNumber() {
+    var link = document.getElementById("support-mail");
+    if (!link) return;
     var o = new URLSearchParams(window.location.search).get("o") || "";
-    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(o)) {
-      btn.href = "https://app.lemonsqueezy.com/my-orders/" + o.toLowerCase();
-    }
+    var ok = /^[0-9]{1,12}$/.test(o) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(o);
+    if (!ok) return;
+    link.href = "mailto:support@taghunterhq.com?subject=" + encodeURIComponent("[TH-K7Q4] Handbook help - order " + o);
   })();
 
   /* ---------- Dev safety net: shout if a checkout URL was never filled in ---------- */

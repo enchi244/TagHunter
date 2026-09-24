@@ -565,6 +565,10 @@ h3 { font: 800 17px/1.3 var(--font-body); }
 .step { display: grid; grid-template-columns: 44px 1fr; gap: 14px; }
 .step p { margin-top: 2px; color: var(--ink-soft); font-size: 15px; line-height: 1.45; }
 .step__n { display: grid; place-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--red); color: var(--cream); font: 400 22px/1 var(--font-display); }
+.callout { margin-top: 20px; padding: 18px 20px; border-radius: var(--radius); background: var(--cream); color: var(--ink); }
+.callout .callout__t { margin: 0 0 6px; font: 800 18px/1.3 var(--font-body); letter-spacing: 0; }
+.callout p { font-size: 16px; line-height: 1.5; }
+.callout a { color: var(--red-dark); font-weight: 700; }
 .band--red .btn + .micro { margin-top: 14px; opacity: 0.9; }
 .copy-status { min-height: 1.5em; margin-top: 8px; font-size: 14px; font-weight: 600; }
 .stack > * + * { margin-top: 14px; }
@@ -578,6 +582,7 @@ h3 { font: 800 17px/1.3 var(--font-body); }
 .legal ul { padding-left: 20px; list-style: disc; }
 .legal li + li { margin-top: 6px; }
 .legal a { color: var(--red-dark); font-weight: 700; }
+.legal code { padding: 2px 7px; border-radius: 6px; background: var(--beige); font: 500 0.95em var(--font-mono); }
 
 /* ---------- While the Lemon Squeezy checkout is open ----------
    lemon.js adds .lemonsqueezy-open to <body>. Blur the page behind the checkout so the hero
