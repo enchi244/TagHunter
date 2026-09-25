@@ -1,10 +1,53 @@
 # Tag Hunter: project status and next steps
 
-Last updated: 25 September 2026
+Last updated: 25 September 2026 (see START HERE below for the handoff)
 Site: https://taghunterhq.com (single-page sales site for the *TJ Maxx Clearance Hunter Handbook*, $24.95 PDF)
 Repo: `enchi244/TagHunter` (GitHub). Deploys from `main` to Cloudflare as a **Worker with static assets** named `taghunter` (Workers Builds, not Pages). `wrangler.jsonc` serves `public/` and runs `worker/` code only for `/api/*`.
 
 Legend: ✅ done and verified in this project · 🟡 done by you, not verified by me · ⏳ open
+
+---
+
+## START HERE (handoff for the next chat, 25 September 2026)
+
+**Status: the first three SEO guide pages and a `/guides/` hub are built** (25 Sep 2026, section 5). Next: after they deploy, verify them live, then in Search Console request indexing for the four new URLs, and plan guide 4+ (ideas: post-holiday "day-after" clearance, Marshalls vs TJ Maxx tags, TJ Maxx damage discount, best months to shop). Owner's stance: going all in on this business, so accuracy and steady growth matter more than speed.
+
+**Guides built:** `/guides/` (hub), `/guides/tj-maxx-tag-colors/`, `/guides/tj-maxx-yellow-sticker/`, `/guides/tj-maxx-markdown-schedule/`. Each has its own title/description/canonical/OG tags, JSON-LD (Article + BreadcrumbList + FAQPage, with the visible FAQ identical to the JSON-LD), a buy section, the Spotter Card form, links to the other guides, a sitemap entry, and a "Guides" footer link on every page. The home page links to the colors guide under the tag checker. Styles are in the "Guide pages" block of `main.css`. Decisions taken with the owner: plain and practical tone, brand byline only ("By Tag Hunter, based on the Clearance Hunter Handbook, updated <date>"), no interactive checker on guides.
+
+**Book-protection rule the owner chose:** free guides give the basics only. The guides deliberately do NOT give: the January/July "yellow gets scanned down again" exception, the 50 to 70% off figure, the red-sticker same-price check (pp. 8 and 9; each guide has a one-paragraph "Two catches worth knowing" teaser instead), the number code (p.11), the month-by-month calendar and day-after rule (p.17), the observation method and sheet (p.18), the store route, hiding spots, damage ask and returns table. Keep new guides to the same line.
+
+### Working agreements with the owner
+- **One step at a time.** The owner asked explicitly to slow down and not ask for several things at once. Give one action, wait for the result, then the next. Use plain language.
+- **Ask before committing or pushing.** Pushing to `main` deploys to the live site. Say what changed, then ask.
+- **Verify, don't assume.** Check live behavior (curl, browser pane, tests) after deploys. Say plainly what was and wasn't verified.
+- **The owner makes the calls** (they decided to keep a city-level postal address in email footers and to keep the repo public). Say a concern once, then respect the decision.
+- **Accuracy over marketing.** No fake urgency, fake reviews or invented claims. Claims about the handbook must match the book. Anything not confirmed gets the book's "unconfirmed" framing.
+- Owner is not deeply technical: never paste secrets into chat (they go straight into Cloudflare/Brevo), and warn about lookalike files or traps.
+
+### The guide-page plan
+- Each guide answers one search question, gives real value from the book, links to the buy page, and ends with the free Spotter Card signup (reuse the form: ids `spotter-form`, `spotter-email`, `spotter-turnstile`, `spotter-status`, and `assets/js/main.js` which handles Turnstile and posting to `/api/subscribe`).
+- Suggested order: (1) "What do TJ Maxx tag colors mean?" (2) "TJ Maxx yellow sticker meaning" (3) "TJ Maxx markdown schedule". Each new page goes under `public/guides/<slug>/index.html`.
+- The paid detail stays in the book: the number-code table (p.11), the store-route and where-clearance-hides pages, the damage-discount script, the returns table (p.24), the tracker and observation sheets.
+- Each page needs: unique `<title>` and meta description, canonical, Open Graph/Twitter tags, JSON-LD (Article or WebPage plus BreadcrumbList; FAQPage only if the FAQ is visible on the page), an entry in `public/sitemap.xml` with date, links from the home page and between guides, a footer link, and a working mobile layout. Yellow is reserved for buy buttons.
+- Source of truth for content: the revised handbook PDF (revision 3), `C:\Users\anton\Downloads\Clearance-Hunter-Handbook.pdf`. Extract text with Python `pymupdf` (poppler/pdftoppm is not installed). Read pages 3, 4, 7, 8, 9 for the colors guide. Keep the book's caveats (yellow is "reported by staff" to sometimes drop again in January/July; page 8's red-sticker caveat is unconfirmed). Do not copy large blocks verbatim: write fresh explanations.
+- Decide with the owner before writing: page tone, whether to add a short "About" or author line, and whether the tag checker widget from the home page can be reused.
+
+### Gotchas learned (save time)
+- **Hosting is a Cloudflare Worker with static assets (Workers Builds), not Pages.** `wrangler.jsonc` serves `public/` and runs `worker/index.js` only for `/api/*`. Pages `functions/` do not run here. Deploys take about a minute after `git push`.
+- **Secrets must be set with `npx wrangler secret put NAME`** (after `npx wrangler login`, then `npx wrangler logout`). Secrets typed into the dashboard's Variables and Secrets box did NOT reach the running Worker. Current secrets: `BREVO_API_KEY`, `BREVO_LIST_ID` (3), `TURNSTILE_SECRET`. Ask the owner before starting any login; they click Allow.
+- **Email provider is Brevo** (MailerLite auto-suspended the new account; Kit's free plan lost automations). Automation "Spotter Card": joins list `Spotter Card` (ID 3), Email 1 now, wait 3 days, Email 2. Copy is in `emails/spotter-card-sequence.md`.
+- **CSP** (`public/_headers`) forbids inline scripts, inline handlers and inline `style=""`. New pages must comply; `node scripts/preflight.mjs --launch` must print OK and `node scripts/test-subscribe.mjs` must pass before every push.
+- The Windows working tree uses CRLF line endings. Use the Edit tool, or preserve CRLF when scripting. Python must read/write UTF-8 explicitly.
+- Local dev server: `node scripts/dev-server.mjs` (port 5173, may be taken by another session; pass another port). It runs `/api/*` from `worker/` using a git-ignored `.dev.vars`.
+- Cloudflare Web Analytics is on (cookieless); the Privacy page says so. Adding any new third-party script needs a CSP change and a Privacy page update.
+- The browser pane cannot complete a real Turnstile challenge on the live site (background tab). Test signup end to end with a real browser, or use Cloudflare's test keys locally.
+- FAQ answers exist twice on the home page (visible text and JSON-LD); keep them identical.
+
+### Owner-side to-dos still open
+- Confirm the Lemon Squeezy product file is the revised PDF (`Clearance-Hunter-Handbook.pdf`, about 555 KB) and watch the first real sale (receipt has a Download button).
+- Search Console: check Pages and Enhancements in 1 to 2 weeks (about 9 October 2026).
+- Privacy and Terms pages are drafts, not legal advice; have them reviewed by a qualified person when budget allows.
+- Optional: PO box or street address for email footers instead of the city-level one (CAN-SPAM).
 
 ---
 
@@ -80,7 +123,7 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 - ✅ Structured data: Organization, WebSite, Product (price $24.95 USD, 30-day return policy, free instant delivery) and FAQPage generated from the visible FAQ. Google's live test shows Product snippets and Merchant listings valid. Remaining notes are optional: `review`, `aggregateRating`, `returnMethod`. **Do not add fake reviews**; add real ones later.
 - 🟡 Google Search Console verified (Domain property), homepage indexed, sitemap submitted, indexing requested. Bing Webmaster imported and URLs submitted.
 - ⏳ Check Search Console **Pages** and **Enhancements** in 1–2 weeks. Expect old Shopify URLs to show as not found; add redirects if any matter.
-- ⏳ **Biggest SEO lever:** guide pages (e.g. "What do TJ Maxx tag colors mean?", "TJ Maxx yellow sticker meaning", "TJ Maxx markdown schedule"), each ending with the Spotter Card signup. Paid detail stays in the book.
+- ✅ **Biggest SEO lever:** guide pages. Built 25 Sep 2026: tag colors, yellow sticker, markdown schedule, plus a `/guides/` hub (see START HERE). ⏳ After deploy: verify live, request indexing in Search Console, and write further guides.
 
 ---
 
@@ -115,7 +158,7 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 **After launch**
 - [x] Visit tracking: Cloudflare Web Analytics, allowed in the CSP and on the Privacy page.
 - [ ] Redirects for old Shopify page addresses if Search Console shows any that matter.
-- [ ] Cancel Shopify only after the new site has worked on the real domain for a few days.
+- [x] Shopify cancelled (owner confirmed, 25 Sep 2026).
 - [ ] Guide pages for SEO (section 5).
 - [ ] Add real reviews to the page and the structured data once you have them.
 - [ ] Parked from the plan: testimonials (after 10–20 sales), Marshalls/HomeGoods edition, longer email sequence, deeper analytics.
