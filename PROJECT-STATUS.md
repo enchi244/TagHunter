@@ -67,10 +67,10 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 - ✅ **Domain:** `taghunterhq.com` registered and DNS-hosted on Cloudflare. Old Shopify DNS records removed, custom domain attached to the project.
 - ✅ **www → bare domain:** 301 redirect rule, with a proxied placeholder `A` record for `www` (`192.0.2.1`, needed so the rule can fire).
 - ✅ **Support email:** Cloudflare Email Routing forwards `support@taghunterhq.com` to your Gmail (MX, DKIM and SPF records added by Cloudflare; catch-all left off).
-- ⏳ **Replying as support@** (Gmail "Send mail as" with an App Password) and the SPF edit to `v=spf1 include:_spf.mx.cloudflare.net include:_spf.google.com ~all`. Not confirmed done.
+- ✅ **Replying as support@:** Gmail "Send mail as" via `smtp.gmail.com:587` with an App Password (named `TagHunter support` in the Google account; revoke it there if ever needed). Replies default to the address a message was sent to. SPF is now `v=spf1 include:_spf.mx.cloudflare.net include:_spf.google.com ~all` (single record). Test message sent as support@ arrived (in Promotions, not spam).
 - **Support subject code:** every "email us" link prefills `[TH-K7Q4] …`. Gmail filter idea: `to:support@taghunterhq.com -subject:"TH-K7Q4"` → label "Unverified", skip inbox. The code is public, so it filters junk but does not authenticate. Verify the order number in Lemon Squeezy before acting on a refund. Security reports (security.txt) will also land in "Unverified".
 - 🟡 Cloudflare setting for preview builds left on, Cloudflare Access left off.
-- ⚠️ The GitHub repo is currently **Public**. Nothing secret is in it, but consider making it private (then confirm Cloudflare still has access).
+- ℹ️ The GitHub repo is **Public** on purpose for now (easy updates). Nothing secret is in it: keys live only as Worker secrets.
 
 ---
 
@@ -99,7 +99,6 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 **Tested ✅** Live signup works end to end: Email 1 arrived in the inbox with a working card link; Email 2 arrived (in Promotions, which is normal). Wait time set back to 3 days. Both emails have a designed footer with unsubscribe link and `Zamboanga City, Philippines 7000` (city-level address: a PO box or full street address would be the stronger choice for CAN-SPAM).
 
 **Still open**
-- SPF: Brevo does not need an SPF change. When you set up Gmail "Send mail as", add `include:_spf.google.com` to the single SPF record (never a second one).
 - Optional: Cloudflare rate-limiting rule for `/api/subscribe`.
 - ✅ Cloudflare Web Analytics allowed in the CSP (script + connect) and described on the Privacy page (was a blocked beacon before). Check the numbers in Cloudflare > Web Analytics after a few days.
 
@@ -108,7 +107,8 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 **Before real sales**
 - [ ] Live-mode checkout link swapped in (section 3).
 - [ ] Have the Privacy and Terms pages reviewed. They are drafts, not legal advice.
-- [ ] Verify against the book: FAQ answers (Marshalls/HomeGoods, US only, TikTok, going out of date).
+- [x] Verified against the book (25 Sep 2026): FAQ, section descriptions, tag-checker wording and page previews now match. Fixed: Marshalls/HomeGoods answer, US-only answer, "The System" contents (observation sheet is in The Timing, p. 18).
+- [ ] Book edits worth making (not on the site): add one line saying it is written for the US (p. 3 or p. 28); switch British wording (colour, diarise, trolley, tills, queue, recognisable) to US wording. If the PDF is re-exported, re-check pages 10/18/23 previews and the Spotter Card image.
 - [ ] Confirm tax display at real checkout ("Plus tax where applicable" is on the page).
 
 **After launch**
