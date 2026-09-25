@@ -215,7 +215,7 @@
         signal: ctrl ? ctrl.signal : undefined
       }).then(function (res) {
         if (res.ok) {
-          say("Check your inbox for the Spotter Card.", "ok");
+          say("Sent! Check your inbox for the Spotter Card. If you don't see it, look in Promotions or All Mail.", "ok");
           form.reset();
           return;
         }
@@ -246,7 +246,7 @@
       // Bots: filled honeypot, or submitted faster than a human can type.
       // Pretend it worked so they learn nothing.
       if ((trap && trap.value) || Date.now() - pageLoadedAt < 2500) {
-        say("Check your inbox for the Spotter Card.", "ok");
+        say("Sent! Check your inbox for the Spotter Card. If you don't see it, look in Promotions or All Mail.", "ok");
         form.reset();
         return;
       }
