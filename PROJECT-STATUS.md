@@ -10,7 +10,7 @@ Legend: ✅ done and verified in this project · 🟡 done by you, not verified 
 
 ## 1. Where we are
 
-The site is built, deployed on the real domain, and takes payment through Lemon Squeezy. The one big functional gap is the **free Spotter Card email signup**, which is not connected yet (section 6).
+The site is built, deployed on the real domain, and takes payment through Lemon Squeezy. The free **Spotter Card email signup** is built but not switched on yet (section 6).
 
 ### What was built ✅
 | Area | State |
@@ -54,7 +54,7 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 - **Suggested confirmation modal text:** message "Payment received. Your receipt, with a Download button for the handbook, is on its way to your inbox."; button "See what's next".
 - 🟡 Store name changed from "Xepharus Online Store" to Tag Hunter; confirmation modal text updated.
 - 🟡 Payment flow tested in **test mode** through to the thank-you page.
-- ⏳ **Go live:** complete Lemon Squeezy verification/payout details, publish the product in live mode, and give me the **live** checkout link to swap in (test-mode links do not take real payments).
+- 🟡 **Live mode:** you confirmed the checkout link is the live one (no test-mode banner on the checkout page when I opened it). Not verified with a real sale yet.
 - ⏳ Do **not** buy your own product and refund it (self-purchase can look like fraud). The first genuine sale is the live check. Watch it closely.
 - ⏳ Check that the PDF is attached to the product and that receipt emails include the Download button.
 - ⏳ Test on a real phone inside the YouTube app (Apple Pay / Google Pay behave differently in in-app browsers).
@@ -84,37 +84,20 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 
 ---
 
-## 6. NEXT: the free Spotter Card signup (the biggest gap)
+## 6. Free Spotter Card signup: connected, waiting for the first live test
 
-**Current state:** the form on the page validates the email, has a honeypot and a too-fast-submit trap, and posts to `data-endpoint` if set. The endpoint is empty, so visitors see "Sign-up isn't switched on yet". Every not-ready-yet visitor is being lost.
+**Decisions taken:** MailerLite, single opt-in, Cloudflare Turnstile, card delivered as a Google Drive "anyone with the link" download (sharing accepted; PDF never in the repo). Email copy is in `emails/spotter-card-sequence.md`.
 
-**The goal (from the plan):** visitor enters email → gets the Spotter Card instantly → a few days later one follow-up email ("Here's what the card doesn't cover") linking to the buy button → optional one seasonal email (January clearance). Keep the sequence small until sales prove the product.
+**Done ✅ / 🟡**
+- ✅ Form posts to `/api/subscribe` (`functions/api/subscribe.js`): same-origin check, Turnstile check, then MailerLite group. 16 tests pass (`node scripts/test-subscribe.mjs`). Turnstile verified in a browser under the CSP with Cloudflare's test keys.
+- 🟡 MailerLite: account, group "Spotter Card", API token, automation (joins group, Email 1 now, 3-day delay, Email 2) built and switched on by you. Sending domain `taghunterhq.com` authenticated via Cloudflare (DKIM CNAME, verification TXT, merged SPF); MailerLite showed "Wait to activate" (up to 24h).
+- 🟡 Cloudflare secrets `MAILERLITE_API_KEY`, `MAILERLITE_GROUP_ID`, `TURNSTILE_SECRET` added by you. Turnstile site key is in `index.html`.
 
-### Decisions needed
-1. **Email provider.** Do you already use one? If not, a free plan is enough while the list is small. Candidates: MailerLite, Kit (ConvertKit), Buttondown, Mailchimp. Lemon Squeezy's own email marketing costs extra by subscriber count; compare against a free tier.
-2. **How the site talks to the provider** (this is the security-critical part):
-
-| Option | How it works | Pros | Cons |
-|---|---|---|---|
-| A. Server function (recommended) | A small Cloudflare function (`/api/subscribe`) receives the form post and calls the provider's API. The API key lives only as a secret environment variable in Cloudflare | Key never visible; no CSP change (calls stay on our own domain); room for Turnstile bot protection and rate limiting | Slightly more setup; need to confirm this project type runs functions |
-| B. Provider's hosted form | The button sends people to the provider's own signup page | Zero code, no key | Leaves your site; less polished |
-| C. Provider's public form endpoint straight from the browser | Form posts directly to the provider | Simple | Needs a CSP change (`connect-src`), varies by provider, weaker spam control |
-
-**Rule: never put a secret API key in `public/`.** Everything there is readable by anyone.
-
-3. **How the card gets delivered.** The PDF must not go in the repo. Options: the provider's welcome-email automation with the PDF attached or linked; or a public unguessable link (acceptable since the card is free, but the email gate can then be bypassed if the link leaks).
-4. **Double opt-in or single?** Single is faster for conversion. Double opt-in is safer legally (EU/UK visitors) and for deliverability. Tell me who you expect to sign up.
-5. **Bot protection:** add Cloudflare Turnstile now or wait until spam shows up?
-6. **Copy:** confirmation message on the page, the welcome email (with the card), and the follow-up email a few days later (subject, body, button to the buy link).
-
-### What I will do once decisions are made
-- Connect the form (and add any needed CSP entry or function).
-- Update the on-page success/error messages.
-- Update the **Privacy page** to name the email provider (currently says "our email service provider").
-- Draft the welcome email and the follow-up email.
-- Add tests: valid email, invalid email, bot traps, provider error, and a check that the CSP still blocks everything unexpected.
-
----
+**Still open ⏳**
+- Push to deploy, then sign up with your own address on the live site. Check Email 1 arrives, the card link opens, and Email 2 follows (test once with a short delay, then set it back to 3 days).
+- Confirm MailerLite shows the sending domain as active. Until then emails may not send from `support@taghunterhq.com`.
+- The SPF record is now `v=spf1 include:_spf.mx.cloudflare.net a mx include:_spf.mlsend.com ~all`. When you set up Gmail "Send mail as", add `include:_spf.google.com` to this same record (never a second SPF record).
+- Optional: Cloudflare rate-limiting rule for `/api/subscribe`.
 
 ## 7. Other open items
 

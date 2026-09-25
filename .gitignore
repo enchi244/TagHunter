@@ -8,6 +8,7 @@
 # Secrets and credentials
 .env
 .env.*
+.dev.vars
 *.pem
 *.key
 *.p12

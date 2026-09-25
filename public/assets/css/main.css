@@ -541,6 +541,7 @@ h3 { font: 800 17px/1.3 var(--font-body); }
 }
 .field::placeholder { color: #7a716a; }
 .capture .btn { margin-top: 10px; }
+.turnstile:not(:empty) { margin-top: 10px; } /* interaction-only: stays empty (invisible) unless a check is needed */
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .form-status { min-height: 1.5em; margin-top: 10px; font-size: 14px; font-weight: 600; }
 .form-status[data-state="error"] { color: var(--red-dark); }

@@ -1,13 +1,46 @@
 // Local dev server for public/. No dependencies.
 // Applies public/_headers the way Cloudflare Pages does, so CSP problems show up locally.
+// It also runs functions/api/*.js (Pages Functions). Their secrets come from a git-ignored
+// .dev.vars file in the project root (KEY=value lines), like Cloudflare's own local tooling.
 // Usage: node scripts/dev-server.mjs [port]
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = resolve(fileURLToPath(new URL("../public", import.meta.url)));
+const PROJECT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const PORT = Number(process.argv[2]) || 5173;
+
+async function loadVars() {
+  const vars = {};
+  try {
+    for (const line of (await readFile(join(PROJECT, ".dev.vars"), "utf8")).split(/\r?\n/)) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+      if (m) vars[m[1]] = m[2].replace(/^["']|["']$/g, "");
+    }
+  } catch { /* no .dev.vars: the function answers "config" */ }
+  return vars;
+}
+
+// /api/name -> functions/api/name.js. Mirrors Pages: onRequestPost wins for POST, else onRequest.
+async function runFunction(req, res, pathname) {
+  const name = pathname.replace(/^\/api\//, "");
+  if (!/^[a-z0-9_-]+$/i.test(name)) { res.writeHead(404).end("Not found"); return; }
+  let mod;
+  try { mod = await import(pathToFileURL(join(PROJECT, "functions", "api", name + ".js")).href + "?t=" + Date.now()); }
+  catch { res.writeHead(404).end("Not found"); return; }
+  const chunks = [];
+  for await (const c of req) chunks.push(c);
+  const request = new Request("http://" + req.headers.host + req.url, {
+    method: req.method,
+    headers: req.headers,
+    body: ["GET", "HEAD"].includes(req.method) ? undefined : Buffer.concat(chunks),
+  });
+  const handler = (req.method === "POST" && mod.onRequestPost) || mod.onRequest;
+  const out = handler ? await handler({ request, env: await loadVars() }) : new Response("Not found", { status: 404 });
+  res.writeHead(out.status, Object.fromEntries(out.headers)).end(Buffer.from(await out.arrayBuffer()));
+}
 
 const TYPES = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -36,6 +69,7 @@ createServer(async (req, res) => {
   const rules = await loadRules(); // re-read each request so edits apply instantly
   const url = new URL(req.url, "http://localhost");
   let pathname = decodeURIComponent(url.pathname);
+  if (pathname.startsWith("/api/")) { await runFunction(req, res, pathname); return; }
 
   const merged = new Map();
   for (const r of rules) {

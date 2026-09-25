@@ -449,11 +449,13 @@
         </figure>
         <div class="capture__form">
 
-          <!-- data-endpoint is set once an email provider is chosen (see README). It must be https and be allowed in the CSP. -->
-          <form class="capture" id="spotter-form" method="post" novalidate data-endpoint="">
+          <!-- Posts to our own /api/subscribe (functions/api/subscribe.js), which holds the MailerLite key.
+               data-sitekey is the PUBLIC Cloudflare Turnstile site key (safe to publish); the secret key lives only in Cloudflare. -->
+          <form class="capture" id="spotter-form" method="post" novalidate data-endpoint="/api/subscribe" data-sitekey="0x4AAAAAAFCxXQDZF5Che0ZH">
             <label class="sr-only" for="spotter-email">Email address</label>
             <input class="field" id="spotter-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" maxlength="254" required placeholder="your@email.com">
             <div class="hp" aria-hidden="true"><label>Leave this field empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+            <div class="turnstile" id="spotter-turnstile"></div>
             <button class="btn btn--outline" type="submit">Send me the card</button>
             <p class="form-status" id="spotter-status" role="status" aria-live="polite"></p>
             <p class="fineprint">You'll get the card, plus one follow-up email. Unsubscribe any time. See our <a href="/privacy/">privacy policy</a>.</p>

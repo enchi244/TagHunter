@@ -40,7 +40,7 @@ for (const f of htmlFiles) {
   // 5. Script/stylesheet origins must be on the CSP allowlist.
   for (const m of src.matchAll(/<(?:script|link)\b[^>]*(?:src|href)=["'](https?:)?\/\/([^/"']+)/gi)) {
     const host = m[2];
-    if (host !== "assets.lemonsqueezy.com" && !/rel=["']canonical/.test(m[0]) && !/rel=["'](?:canonical|alternate)/.test(m[0])) {
+    if (host !== "assets.lemonsqueezy.com" && host !== "challenges.cloudflare.com" && !/rel=["']canonical/.test(m[0]) && !/rel=["'](?:canonical|alternate)/.test(m[0])) {
       if (/<script/i.test(m[0]) || /stylesheet|preload/.test(m[0])) fail(f, `loads from ${host}, which the CSP does not allow`);
     }
   }
@@ -58,6 +58,7 @@ for (const f of htmlFiles) {
   }
   // 8. Launch placeholders.
   if (/YOUR-STORE|YOUR-PRODUCT/.test(src)) (launch ? fail : (a, b) => warns.push(`${relative(ROOT, a)}: ${b}`))(f, "checkout URL placeholder still present");
+  if (/YOUR-TURNSTILE-SITE-KEY/.test(src)) (launch ? fail : (a, b) => warns.push(`${relative(ROOT, a)}: ${b}`))(f, "Turnstile site key placeholder still present");
   if (/support@taghunterhq\.com/.test(src) && launch) warns.push(`${relative(ROOT, f)}: confirm support@taghunterhq.com is a real, monitored inbox`);
 }
 
@@ -75,6 +76,11 @@ else {
 
 // Secrets / junk that must never be in the web root.
 for (const f of files) {
+  // Long JWT-style tokens (MailerLite keys) or Turnstile secret keys (0x4... 30+ chars) must never be published.
+  if (/\.(html|js|css|json|txt|xml)$/i.test(f)) {
+    const t = readFileSync(f, "utf8");
+    if (/eyJ[A-Za-z0-9_-]{30,}\.[A-Za-z0-9_-]{20,}/.test(t) || /0x4[A-Za-z0-9_-]{30,}/.test(t)) fail(f, "looks like a secret key: keys belong in Cloudflare secrets, never in public/");
+  }
   const n = f.toLowerCase();
   if (/(^|[\\/])(\.env|\.git|node_modules)([\\/]|$)|\.(pem|key|map|bak|zip|sql|pdf)$/.test(n)) fail(f, "should not be deployed");
   if (extname(f) === ".pdf") fail(f, "product PDF must not be in the web root (it would be publicly downloadable)");

@@ -124,9 +124,106 @@
     var button = form.querySelector('button[type="submit"]');
     var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
+    // Only our own /api/ path, or an https URL, is ever used as the endpoint.
+    var endpoint = form.getAttribute("data-endpoint") || "";
+    var endpointOk = /^\/api\/[a-z0-9\/_-]+$/i.test(endpoint) || endpoint.indexOf("https://") === 0;
+    var sitekey = form.getAttribute("data-sitekey") || "";
+    var sitekeyOk = /^[0-9A-Za-z_-]{8,64}$/.test(sitekey) && sitekey.indexOf("YOUR-") !== 0;
+
+    /* Cloudflare Turnstile: bot check. Loaded only when a visitor first touches the form, so people
+       who never use it never load a third-party script. In "interaction-only" mode nothing is shown
+       unless Cloudflare is unsure the visitor is human. */
+    var widgetId = null;
+    var token = "";
+    var loadingTs = false;
+    var waiting = false; // visitor pressed the button before the check finished
+
     function say(msg, state) {
       status.textContent = msg;
       status.setAttribute("data-state", state || "");
+    }
+
+    function renderTurnstile() {
+      if (widgetId !== null || !window.turnstile) return;
+      widgetId = window.turnstile.render("#spotter-turnstile", {
+        sitekey: sitekey,
+        appearance: "interaction-only",
+        callback: function (t) {
+          token = t;
+          if (waiting) { waiting = false; send(); }
+        },
+        "expired-callback": function () { token = ""; },
+        "error-callback": function () {
+          token = "";
+          if (waiting) { waiting = false; button.disabled = false; }
+          say("The security check didn't load. Please refresh the page and try again.", "error");
+        }
+      });
+    }
+
+    function loadTurnstile() {
+      if (loadingTs || !sitekeyOk) return;
+      loadingTs = true;
+      var s = document.createElement("script");
+      s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      s.async = true;
+      s.onload = renderTurnstile;
+      s.onerror = function () {
+        loadingTs = false;
+        if (waiting) {
+          waiting = false;
+          button.disabled = false;
+          say("The security check didn't load. Please refresh the page and try again.", "error");
+        }
+      };
+      document.head.appendChild(s);
+    }
+
+    input.addEventListener("focus", loadTurnstile);
+    if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) { io.disconnect(); loadTurnstile(); }
+      }, { rootMargin: "300px" });
+      io.observe(form);
+    }
+
+    function resetCheck() {
+      token = "";
+      if (window.turnstile && widgetId !== null) window.turnstile.reset(widgetId);
+    }
+
+    function send() {
+      var email = (input.value || "").trim();
+      button.disabled = true;
+      say("Sending…", "");
+      var ctrl = "AbortController" in window ? new AbortController() : null;
+      var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 10000) : null;
+
+      fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email, token: token }),
+        credentials: "omit",
+        referrerPolicy: "no-referrer",
+        signal: ctrl ? ctrl.signal : undefined
+      }).then(function (res) {
+        if (res.ok) {
+          say("Check your inbox for the Spotter Card.", "ok");
+          form.reset();
+          return;
+        }
+        return res.json().catch(function () { return {}; }).then(function (body) {
+          if (body.error === "email") say("That email address doesn't look right. Please check it and try again.", "error");
+          else if (body.error === "captcha") say("The security check didn't pass. Please try again.", "error");
+          else say("Something went wrong. Please try again in a moment.", "error");
+        });
+      }).catch(function () {
+        say("Something went wrong. Please try again in a moment.", "error");
+      }).then(function () {
+        if (timer) clearTimeout(timer);
+        button.disabled = false;
+        resetCheck(); // a Turnstile token works once
+      });
     }
 
     form.addEventListener("submit", function (e) {
@@ -147,34 +244,21 @@
         return;
       }
 
-      var endpoint = form.getAttribute("data-endpoint") || "";
-      if (endpoint.indexOf("https://") !== 0) {
+      if (!endpointOk || !sitekeyOk) {
         say("Sign-up isn't switched on yet. Please check back soon.", "error");
         return;
       }
 
-      button.disabled = true;
-      say("Sending…", "");
-      var ctrl = "AbortController" in window ? new AbortController() : null;
-      var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 10000) : null;
-
-      fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email, source: "spotter-card" }),
-        credentials: "omit",
-        referrerPolicy: "no-referrer",
-        signal: ctrl ? ctrl.signal : undefined
-      }).then(function (res) {
-        if (!res.ok) throw new Error("bad status");
-        say("Check your inbox for the Spotter Card.", "ok");
-        form.reset();
-      }).catch(function () {
-        say("Something went wrong. Please try again in a moment.", "error");
-      }).then(function () {
-        if (timer) clearTimeout(timer);
-        button.disabled = false;
-      });
+      if (!token) {
+        // Security check still running: hold the click and send as soon as it finishes.
+        waiting = true;
+        button.disabled = true;
+        say("Checking that you're human…", "");
+        loadTurnstile();
+        renderTurnstile();
+        return;
+      }
+      send();
     });
   })();
 
