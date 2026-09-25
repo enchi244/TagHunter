@@ -91,7 +91,7 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 **Done ✅ / 🟡**
 - ✅ Form posts to `/api/subscribe` (`worker/subscribe.js`, routed by `worker/index.js`): same-origin check, Turnstile check, then MailerLite group. 16 tests pass (`node scripts/test-subscribe.mjs`). Turnstile verified in a browser under the CSP with Cloudflare's test keys.
 - 🟡 MailerLite: account, group "Spotter Card", API token, automation (joins group, Email 1 now, 3-day delay, Email 2) built and switched on by you. Sending domain `taghunterhq.com` authenticated via Cloudflare (DKIM CNAME, verification TXT, merged SPF); MailerLite showed "Wait to activate" (up to 24h).
-- 🟡 Cloudflare secrets `MAILERLITE_API_KEY`, `MAILERLITE_GROUP_ID`, `TURNSTILE_SECRET` added by you. Turnstile site key is in `index.html`.
+- ✅ Secrets `MAILERLITE_API_KEY`, `MAILERLITE_GROUP_ID`, `TURNSTILE_SECRET` are live on the Worker. **Lesson:** adding them in the dashboard's Variables and Secrets box did NOT reach the running Worker (no version was created). They were set with `npx wrangler secret put NAME` instead, which deploys at once. If you ever rotate one, use the same command. Turnstile site key is in `index.html`.
 
 **Still open ⏳**
 - Push to deploy, then sign up with your own address on the live site. Check Email 1 arrives, the card link opens, and Email 2 follows (test once with a short delay, then set it back to 3 days).

@@ -31,7 +31,7 @@ export async function onRequestPost({ request, env }) {
   if (!env.MAILERLITE_API_KEY || !env.MAILERLITE_GROUP_ID || !env.TURNSTILE_SECRET) {
     const missing = ["MAILERLITE_API_KEY", "MAILERLITE_GROUP_ID", "TURNSTILE_SECRET"].filter((k) => !env[k]);
     console.error("subscribe: missing configuration: " + missing.join(", "));
-    return reply(503, { error: "config", missing }); // TEMP DEBUG: names only
+    return reply(503, { error: "config" });
   }
 
   let raw;
