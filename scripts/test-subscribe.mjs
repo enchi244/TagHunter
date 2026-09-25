@@ -98,7 +98,7 @@ test("Turnstile says no -> 403 and MailerLite is not called", async () => {
   turnstile.body = { success: false, "error-codes": ["invalid-input-response"] };
   const res = await post(good);
   assert.equal(res.status, 403);
-  assert.deepEqual(await res.json(), { error: "captcha" });
+  assert.deepEqual(await res.json(), { error: "captcha", codes: ["invalid-input-response"] });
   assert.equal(calls.length, 1);
 });
 test("Turnstile unreachable -> 502", async () => {

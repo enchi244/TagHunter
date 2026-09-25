@@ -64,10 +64,14 @@ export async function onRequestPost({ request, env }) {
       signal: AbortSignal.timeout(8000),
     });
     const out = await res.json();
-    if (!out || out.success !== true) return reply(403, { error: "captcha" });
+    if (!out || out.success !== true) {
+      const codes = out && Array.isArray(out["error-codes"]) ? out["error-codes"].slice(0, 5) : [];
+      console.error("subscribe: turnstile rejected: " + codes.join(","));
+      return reply(403, { error: "captcha", codes }); // codes are Cloudflare's public error names, e.g. "timeout-or-duplicate"
+    }
   } catch {
     console.error("subscribe: turnstile verification failed to run");
-    return reply(502, { error: "upstream" });
+    return reply(502, { error: "upstream", stage: "turnstile" });
   }
 
   // 2. MailerLite: create the subscriber (or update the existing one) and put them in the group.
@@ -88,10 +92,10 @@ export async function onRequestPost({ request, env }) {
     // 422 = MailerLite rejected the address (invalid, blocked or bounced): tell the visitor.
     if (res.status === 422) return reply(400, { error: "email" });
     console.error("subscribe: mailerlite status " + res.status); // status only, never the address
-    return reply(502, { error: "upstream" });
+    return reply(502, { error: "upstream", stage: "mailerlite", status: res.status });
   } catch {
     console.error("subscribe: mailerlite request failed");
-    return reply(502, { error: "upstream" });
+    return reply(502, { error: "upstream", stage: "mailerlite" });
   }
 }
 
