@@ -94,13 +94,14 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 - Form posts to `/api/subscribe` (`worker/subscribe.js`, routed by `worker/index.js`): same-origin check, Turnstile check, then adds the address to the Brevo list. 17 tests pass (`node scripts/test-subscribe.mjs`).
 - Brevo: domain authenticated, sender `support@taghunterhq.com` verified, list `Spotter Card` (ID 3), automation switched on (Email 1 now, 3-day wait, Email 2), re-entry off.
 - Worker secrets `BREVO_API_KEY`, `BREVO_LIST_ID`, `TURNSTILE_SECRET` set with `npx wrangler secret put`. **Lesson:** secrets typed into the dashboard's Variables and Secrets box did NOT reach the running Worker. Use the wrangler command (and `wrangler login`/`logout` around it), also when rotating.
-- Old MailerLite secrets deleted from the Worker. **Leftovers to clean up:** the MailerLite DNS records in Cloudflare (DKIM CNAME `litesrv._domainkey`, TXT `mailerlite-domain-verification`, and `include:_spf.mlsend.com` in the SPF record) and the MailerLite account.
+- ✅ MailerLite fully removed from the Worker and from DNS (verification TXT deleted, SPF restored to `v=spf1 include:_spf.mx.cloudflare.net ~all`). The suspended MailerLite account itself can simply be left alone.
+
+**Tested ✅** Live signup works end to end: Email 1 arrived in the inbox with a working card link; Email 2 arrived (in Promotions, which is normal). Wait time set back to 3 days. Both emails have a designed footer with unsubscribe link and `Zamboanga City, Philippines 7000` (city-level address: a PO box or full street address would be the stronger choice for CAN-SPAM).
 
 **Still open**
-- First real signup on the live site: check Email 1 arrives, the card link opens, and (3 days later) Email 2.
 - SPF: Brevo does not need an SPF change. When you set up Gmail "Send mail as", add `include:_spf.google.com` to the single SPF record (never a second one).
 - Optional: Cloudflare rate-limiting rule for `/api/subscribe`.
-- Cloudflare is injecting its Web Analytics beacon; the CSP blocks it (a harmless console error). Either turn that off in Cloudflare or allow it and update the Privacy page.
+- ✅ Cloudflare Web Analytics allowed in the CSP (script + connect) and described on the Privacy page (was a blocked beacon before). Check the numbers in Cloudflare > Web Analytics after a few days.
 
 ## 7. Other open items
 
@@ -111,7 +112,7 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 - [ ] Confirm tax display at real checkout ("Plus tax where applicable" is on the page).
 
 **After launch**
-- [ ] Visit tracking. Cloudflare Web Analytics is cookieless but needs `static.cloudflareinsights.com` in `script-src` and `cloudflareinsights.com` in `connect-src`, and a Privacy page update.
+- [x] Visit tracking: Cloudflare Web Analytics, allowed in the CSP and on the Privacy page.
 - [ ] Redirects for old Shopify page addresses if Search Console shows any that matter.
 - [ ] Cancel Shopify only after the new site has worked on the real domain for a few days.
 - [ ] Guide pages for SEO (section 5).

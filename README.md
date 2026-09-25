@@ -78,7 +78,7 @@ Known trade-offs:
 - Turnstile's script comes from `challenges.cloudflare.com` (allowed in `script-src` and `frame-src`); it has no SRI hash because Cloudflare updates it in place.
 - `/api/subscribe` has no rate limit of its own. Turnstile covers bots; if abuse appears, add a Cloudflare rate-limiting rule for `/api/subscribe`.
 - Worker responses (`/api/*`) do not get `_headers` (Cloudflare applies it only to static files), so the handler sets its own `Cache-Control` and `nosniff`.
-- Analytics: none yet. Cloudflare Web Analytics is cookieless; enabling it needs `https://static.cloudflareinsights.com` in `script-src` and `https://cloudflareinsights.com` in `connect-src`.
+- Analytics: Cloudflare Web Analytics (cookieless) is on. Cloudflare injects the beacon itself, so it is allowed via `https://static.cloudflareinsights.com` in `script-src` and `https://cloudflareinsights.com` in `connect-src`. Both are third-party origins without SRI; the Privacy page describes it.
 
 ## Still to test with real values
 - Full checkout on a real phone inside the YouTube app (Apple Pay in an in-app browser), and that the CSP does not block anything once your real checkout URL is in.
