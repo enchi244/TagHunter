@@ -192,6 +192,13 @@
       if (window.turnstile && widgetId !== null) window.turnstile.reset(widgetId);
     }
 
+    // Short reference like "mailerlite-401", so a failure can be traced without exposing anything sensitive.
+    function errorCode(httpStatus, body) {
+      var stage = typeof body.stage === "string" ? body.stage.replace(/[^a-z]/g, "").slice(0, 20) : "";
+      var code = typeof body.status === "number" ? body.status : httpStatus;
+      return (stage || (typeof body.error === "string" ? body.error.replace(/[^a-z]/g, "").slice(0, 20) : "http")) + "-" + code;
+    }
+
     function send() {
       var email = (input.value || "").trim();
       button.disabled = true;
@@ -215,10 +222,10 @@
         return res.json().catch(function () { return {}; }).then(function (body) {
           if (body.error === "email") say("That email address doesn't look right. Please check it and try again.", "error");
           else if (body.error === "captcha") say("The security check didn't pass. Please try again.", "error");
-          else say("Something went wrong. Please try again in a moment.", "error");
+          else say("Something went wrong (code: " + errorCode(res.status, body) + "). Please try again in a moment.", "error");
         });
       }).catch(function () {
-        say("Something went wrong. Please try again in a moment.", "error");
+        say("Something went wrong (code: network). Please try again in a moment.", "error");
       }).then(function () {
         if (timer) clearTimeout(timer);
         button.disabled = false;
