@@ -108,7 +108,8 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 - [ ] Live-mode checkout link swapped in (section 3).
 - [ ] Have the Privacy and Terms pages reviewed. They are drafts, not legal advice.
 - [x] Verified against the book (25 Sep 2026): FAQ, section descriptions, tag-checker wording and page previews now match. Fixed: Marshalls/HomeGoods answer, US-only answer, "The System" contents (observation sheet is in The Timing, p. 18).
-- [ ] Book edits worth making (not on the site): add one line saying it is written for the US (p. 3 or p. 28); switch British wording (colour, diarise, trolley, tills, queue, recognisable) to US wording. If the PDF is re-exported, re-check pages 10/18/23 previews and the Spotter Card image.
+- [x] Handbook revised to revision 3 (25 Sep 2026): US English, US-only and sister-banner scope statements, page 24 returns table checked against TJ Maxx's official US pages (40-day online window, $11.99 mail fee, PayPal credit rules, not-eligible-in-store list, gift receipts), certainty softened on reported figures, unconfirmed marker on the re-ticket claim, 25 bookmarks and 25 contents links. Only the page 23 preview needed refreshing (done). Pages 1, 10, 12 and 18 are unchanged.
+- [ ] **Upload the revised PDF to Lemon Squeezy** (replace the product file). Keep the file name `Clearance-Hunter-Handbook.pdf`. Old versions in Downloads: `Clearance Hunter Handbook.pdf` is the original (do not upload), `...pdf.pdf` is revision 2.
 - [ ] Confirm tax display at real checkout ("Plus tax where applicable" is on the page).
 
 **After launch**
