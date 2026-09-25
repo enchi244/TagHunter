@@ -1,0 +1,16 @@
+{
+  // Cloudflare Workers Builds deploys this on every push to main.
+  // The Worker's name must match the Worker in the dashboard ("taghunter").
+  "name": "taghunter",
+  "main": "worker/index.js",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    // Only /api/* runs our code; every other URL is served straight from public/ (with _headers applied).
+    "run_worker_first": ["/api/*"],
+    "not_found_handling": "404-page"
+  }
+  // Secrets (MAILERLITE_API_KEY, MAILERLITE_GROUP_ID, TURNSTILE_SECRET) live in the Cloudflare dashboard
+  // under this Worker's Settings > Variables and Secrets. Never put them in this file.
+}

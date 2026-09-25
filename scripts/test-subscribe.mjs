@@ -1,7 +1,7 @@
-// Tests for functions/api/subscribe.js with a fake fetch (no network, no real keys).
+// Tests for worker/subscribe.js with a fake fetch (no network, no real keys).
 // Usage: node scripts/test-subscribe.mjs
 import assert from "node:assert/strict";
-import { onRequestPost, onRequest } from "../functions/api/subscribe.js";
+import { onRequestPost, onRequest } from "../worker/subscribe.js";
 
 const ORIGIN = "https://taghunterhq.com";
 const ENV = { MAILERLITE_API_KEY: "ml-test-key", MAILERLITE_GROUP_ID: "12345", TURNSTILE_SECRET: "ts-test-secret" };

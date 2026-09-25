@@ -2,7 +2,7 @@
 
 Last updated: 25 September 2026
 Site: https://taghunterhq.com (single-page sales site for the *TJ Maxx Clearance Hunter Handbook*, $24.95 PDF)
-Repo: `enchi244/TagHunter` (GitHub). Deploys from `main` to Cloudflare (project `taghunter`), output directory `public`.
+Repo: `enchi244/TagHunter` (GitHub). Deploys from `main` to Cloudflare as a **Worker with static assets** named `taghunter` (Workers Builds, not Pages). `wrangler.jsonc` serves `public/` and runs `worker/` code only for `/api/*`.
 
 Legend: ✅ done and verified in this project · 🟡 done by you, not verified by me · ⏳ open
 
@@ -89,7 +89,7 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 **Decisions taken:** MailerLite, single opt-in, Cloudflare Turnstile, card delivered as a Google Drive "anyone with the link" download (sharing accepted; PDF never in the repo). Email copy is in `emails/spotter-card-sequence.md`.
 
 **Done ✅ / 🟡**
-- ✅ Form posts to `/api/subscribe` (`functions/api/subscribe.js`): same-origin check, Turnstile check, then MailerLite group. 16 tests pass (`node scripts/test-subscribe.mjs`). Turnstile verified in a browser under the CSP with Cloudflare's test keys.
+- ✅ Form posts to `/api/subscribe` (`worker/subscribe.js`, routed by `worker/index.js`): same-origin check, Turnstile check, then MailerLite group. 16 tests pass (`node scripts/test-subscribe.mjs`). Turnstile verified in a browser under the CSP with Cloudflare's test keys.
 - 🟡 MailerLite: account, group "Spotter Card", API token, automation (joins group, Email 1 now, 3-day delay, Email 2) built and switched on by you. Sending domain `taghunterhq.com` authenticated via Cloudflare (DKIM CNAME, verification TXT, merged SPF); MailerLite showed "Wait to activate" (up to 24h).
 - 🟡 Cloudflare secrets `MAILERLITE_API_KEY`, `MAILERLITE_GROUP_ID`, `TURNSTILE_SECRET` added by you. Turnstile site key is in `index.html`.
 

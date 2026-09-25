@@ -10,7 +10,8 @@ public/            <- the ONLY folder that gets deployed (Cloudflare "build outp
   refunds/ privacy/ terms/ contact/   footer pages
   _headers           security headers + caching (Cloudflare Pages reads this)
   assets/            css, js, self-hosted fonts, images (logo, book cover, page previews)
-functions/         Cloudflare Pages Functions: api/subscribe.js (Spotter Card signup). Deployed with the site
+worker/            Cloudflare Worker code: index.js routes /api/*, subscribe.js is the Spotter Card signup. Deployed with the site
+wrangler.jsonc     Worker config: serves public/ as static assets, runs the Worker only for /api/*
 emails/            reference copy of the Spotter Card emails + MailerLite setup checklist (never deployed)
 scripts/           dev server, preflight checker, subscribe tests (never deployed)
 ```
@@ -22,10 +23,10 @@ node scripts/dev-server.mjs        # http://localhost:5173, applies _headers lik
 node scripts/preflight.mjs         # safety checks; add --launch to also fail on unfilled placeholders
 ```
 
-## Hosting: use Cloudflare Pages (not GitHub Pages)
+## Hosting: Cloudflare (not GitHub Pages)
 
 Security headers (CSP, HSTS, etc.) can only be set with `_headers`, which Cloudflare Pages supports and GitHub Pages does not.
-Create a Pages project, build command empty, **build output directory `public`**. Point taghunterhq.com at it, then cancel Shopify.
+The live project is a Cloudflare **Worker with static assets** ("Workers Builds", deploys on push to `main`), configured by `wrangler.jsonc`. Pages Functions (`functions/`) do not run there. Point taghunterhq.com at it, then cancel Shopify.
 
 ## Before launch (placeholders to fill)
 
@@ -33,16 +34,16 @@ Create a Pages project, build command empty, **build output directory `public`**
    Replace all three with your real Lemon Squeezy checkout link (Share > Checkout Overlay). Keep `class="lemonsqueezy-button"`.
 2. **Support email.** `support@taghunterhq.com` is an assumed address (pages, `security.txt`). Change it or create it.
 3. **Email capture (MailerLite + Turnstile).** The Spotter Card form posts to our own `/api/subscribe`
-   (`functions/api/subscribe.js`, a Cloudflare Pages Function). It checks a Cloudflare Turnstile token, then adds the
+   (`worker/subscribe.js`, called from `worker/index.js`; the site runs on a Cloudflare Worker with static assets). It checks a Cloudflare Turnstile token, then adds the
    address to a MailerLite group; a MailerLite automation on that group sends the card and the follow-up
    (copy in `emails/spotter-card-sequence.md`, which also has the MailerLite setup checklist).
    To switch it on:
    - Cloudflare > Turnstile > add a widget for `taghunterhq.com`. Put the **site key** (public) in `data-sitekey` on the form in `public/index.html`
      (replacing `YOUR-TURNSTILE-SITE-KEY`).
-   - Cloudflare > Workers & Pages > taghunter > Settings > Variables and Secrets (Production), add as **Secrets**:
+   - Cloudflare > Workers & Pages > the `taghunter` Worker > Settings > Variables and Secrets, add as **Secrets**:
      `MAILERLITE_API_KEY`, `MAILERLITE_GROUP_ID`, `TURNSTILE_SECRET`. Redeploy after adding them.
    Never put a secret in `public/` or in the repo: `preflight` fails on key-shaped strings in `public/`.
-   Local testing: put the same three names in a git-ignored `.dev.vars` file (`NAME=value` per line); `dev-server.mjs` runs the function.
+   Local testing: put the same three names in a git-ignored `.dev.vars` file (`NAME=value` per line); `dev-server.mjs` runs the handler. `npx wrangler dev` runs the real Worker locally.
    Cloudflare's Turnstile test keys (site `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`) always pass.
 4. **Thank-you download button** links to `https://app.lemonsqueezy.com/my-orders` on purpose. Putting the PDF at a public URL would let anyone share it.
    `preflight` fails if a `.pdf` ends up in `public/`. Set the LS confirmation button to `https://taghunterhq.com/thank-you/`.
@@ -76,7 +77,7 @@ Known trade-offs:
 - HSTS has no `preload`. Add it only once every subdomain of taghunterhq.com is HTTPS-only.
 - Turnstile's script comes from `challenges.cloudflare.com` (allowed in `script-src` and `frame-src`); it has no SRI hash because Cloudflare updates it in place.
 - `/api/subscribe` has no rate limit of its own. Turnstile covers bots; if abuse appears, add a Cloudflare rate-limiting rule for `/api/subscribe`.
-- Function responses do not get `_headers` (Cloudflare only applies it to static files), so the function sets its own `Cache-Control` and `nosniff`.
+- Worker responses (`/api/*`) do not get `_headers` (Cloudflare applies it only to static files), so the handler sets its own `Cache-Control` and `nosniff`.
 - Analytics: none yet. Cloudflare Web Analytics is cookieless; enabling it needs `https://static.cloudflareinsights.com` in `script-src` and `https://cloudflareinsights.com` in `connect-src`.
 
 ## Still to test with real values

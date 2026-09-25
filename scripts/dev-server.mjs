@@ -1,6 +1,6 @@
 // Local dev server for public/. No dependencies.
 // Applies public/_headers the way Cloudflare Pages does, so CSP problems show up locally.
-// It also runs functions/api/*.js (Pages Functions). Their secrets come from a git-ignored
+// It also runs worker/*.js handlers for /api/*. Their secrets come from a git-ignored
 // .dev.vars file in the project root (KEY=value lines), like Cloudflare's own local tooling.
 // Usage: node scripts/dev-server.mjs [port]
 import { createServer } from "node:http";
@@ -23,12 +23,12 @@ async function loadVars() {
   return vars;
 }
 
-// /api/name -> functions/api/name.js. Mirrors Pages: onRequestPost wins for POST, else onRequest.
+// /api/name -> worker/name.js. Mirrors worker/index.js: onRequestPost for POST, else onRequest.
 async function runFunction(req, res, pathname) {
   const name = pathname.replace(/^\/api\//, "");
   if (!/^[a-z0-9_-]+$/i.test(name)) { res.writeHead(404).end("Not found"); return; }
   let mod;
-  try { mod = await import(pathToFileURL(join(PROJECT, "functions", "api", name + ".js")).href + "?t=" + Date.now()); }
+  try { mod = await import(pathToFileURL(join(PROJECT, "worker", name + ".js")).href + "?t=" + Date.now()); }
   catch { res.writeHead(404).end("Not found"); return; }
   const chunks = [];
   for await (const c of req) chunks.push(c);

@@ -1,8 +1,8 @@
-// POST /api/subscribe: the free Spotter Card signup.
-// Cloudflare Pages Function. Flow: same-origin check -> validate email -> verify Turnstile token
+// POST /api/subscribe: the free Spotter Card signup (called from worker/index.js).
+// Flow: same-origin check -> validate email -> verify Turnstile token
 // -> add the address to a MailerLite group. The MailerLite automation on that group sends the card.
 //
-// Secrets (Cloudflare > Workers & Pages > taghunter > Settings > Variables and Secrets):
+// Secrets (Cloudflare > Workers & Pages > taghunter Worker > Settings > Variables and Secrets):
 //   MAILERLITE_API_KEY   MailerLite API token (secret)
 //   MAILERLITE_GROUP_ID  numeric id of the group the welcome automation listens to
 //   TURNSTILE_SECRET     Turnstile widget secret key (secret)
