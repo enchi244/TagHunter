@@ -449,7 +449,7 @@
         </figure>
         <div class="capture__form">
 
-          <!-- Posts to our own /api/subscribe (functions/api/subscribe.js), which holds the MailerLite key.
+          <!-- Posts to our own /api/subscribe (worker/subscribe.js), which holds the email provider key.
                data-sitekey is the PUBLIC Cloudflare Turnstile site key (safe to publish); the secret key lives only in Cloudflare. -->
           <form class="capture" id="spotter-form" method="post" novalidate data-endpoint="/api/subscribe" data-sitekey="0x4AAAAAAFCxXQDZF5Che0ZH">
             <label class="sr-only" for="spotter-email">Email address</label>

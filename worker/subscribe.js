@@ -1,11 +1,11 @@
 // POST /api/subscribe: the free Spotter Card signup (called from worker/index.js).
 // Flow: same-origin check -> validate email -> verify Turnstile token
-// -> add the address to a MailerLite group. The MailerLite automation on that group sends the card.
+// -> add the address to a Brevo list. The Brevo automation on that list sends the card.
 //
 // Secrets (Cloudflare > Workers & Pages > taghunter Worker > Settings > Variables and Secrets):
-//   MAILERLITE_API_KEY   MailerLite API token (secret)
-//   MAILERLITE_GROUP_ID  numeric id of the group the welcome automation listens to
-//   TURNSTILE_SECRET     Turnstile widget secret key (secret)
+//   BREVO_API_KEY      Brevo API key (secret)
+//   BREVO_LIST_ID      numeric id of the Brevo list the welcome automation listens to
+//   TURNSTILE_SECRET   Turnstile widget secret key (secret)
 // None of these may ever appear in public/ or in the repo.
 
 const MAX_BODY = 2048;
@@ -28,8 +28,8 @@ export async function onRequestPost({ request, env }) {
   if (!(request.headers.get("Content-Type") || "").toLowerCase().startsWith("application/json")) {
     return reply(415, { error: "type" });
   }
-  if (!env.MAILERLITE_API_KEY || !env.MAILERLITE_GROUP_ID || !env.TURNSTILE_SECRET) {
-    const missing = ["MAILERLITE_API_KEY", "MAILERLITE_GROUP_ID", "TURNSTILE_SECRET"].filter((k) => !env[k]);
+  if (!env.BREVO_API_KEY || !env.BREVO_LIST_ID || !env.TURNSTILE_SECRET) {
+    const missing = ["BREVO_API_KEY", "BREVO_LIST_ID", "TURNSTILE_SECRET"].filter((k) => !env[k]);
     console.error("subscribe: missing configuration: " + missing.join(", "));
     return reply(503, { error: "config" });
   }
@@ -74,28 +74,32 @@ export async function onRequestPost({ request, env }) {
     return reply(502, { error: "upstream", stage: "turnstile" });
   }
 
-  // 2. MailerLite: create the subscriber (or update the existing one) and put them in the group.
-  //    Adding to the group is what starts the welcome automation. An address that is already in the
-  //    group does not trigger it again, so repeat submissions never send the card twice.
+  // 2. Brevo: create the contact (or update the existing one) and put them on the list.
+  //    Joining the list is what starts the welcome automation. An address that is already on the
+  //    list does not trigger it again, so repeat submissions never send the card twice.
+  //    Brevo answers 201 for a new contact and 204 when an existing one was updated.
   try {
-    const res = await fetch("https://connect.mailerlite.com/api/subscribers", {
+    const res = await fetch("https://api.brevo.com/v3/contacts", {
       method: "POST",
       headers: {
-        Authorization: "Bearer " + env.MAILERLITE_API_KEY,
+        "api-key": env.BREVO_API_KEY,
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({ email, groups: [String(env.MAILERLITE_GROUP_ID)], status: "active" }),
+      body: JSON.stringify({ email, listIds: [Number(env.BREVO_LIST_ID)], updateEnabled: true }),
       signal: AbortSignal.timeout(8000),
     });
-    if (res.status === 200 || res.status === 201) return reply(200, { ok: true });
-    // 422 = MailerLite rejected the address (invalid, blocked or bounced): tell the visitor.
-    if (res.status === 422) return reply(400, { error: "email" });
-    console.error("subscribe: mailerlite status " + res.status); // status only, never the address
-    return reply(502, { error: "upstream", stage: "mailerlite", status: res.status });
+    if (res.status === 201 || res.status === 204) return reply(200, { ok: true });
+    // 400 that names the email = Brevo rejected the address itself: tell the visitor.
+    if (res.status === 400) {
+      const info = await res.json().catch(() => ({}));
+      if (/e-?mail/i.test(String(info && info.message))) return reply(400, { error: "email" });
+    }
+    console.error("subscribe: brevo status " + res.status); // status only, never the address
+    return reply(502, { error: "upstream", stage: "brevo", status: res.status });
   } catch {
-    console.error("subscribe: mailerlite request failed");
-    return reply(502, { error: "upstream", stage: "mailerlite" });
+    console.error("subscribe: brevo request failed");
+    return reply(502, { error: "upstream", stage: "brevo" });
   }
 }
 

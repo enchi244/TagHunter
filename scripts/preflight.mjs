@@ -76,7 +76,7 @@ else {
 
 // Secrets / junk that must never be in the web root.
 for (const f of files) {
-  // Long JWT-style tokens (MailerLite keys) or Turnstile secret keys (0x4... 30+ chars) must never be published.
+  // Long JWT-style tokens (Brevo/other provider keys) or Turnstile secret keys (0x4... 30+ chars) must never be published.
   if (/\.(html|js|css|json|txt|xml)$/i.test(f)) {
     const t = readFileSync(f, "utf8");
     if (/eyJ[A-Za-z0-9_-]{30,}\.[A-Za-z0-9_-]{20,}/.test(t) || /0x4[A-Za-z0-9_-]{30,}/.test(t)) fail(f, "looks like a secret key: keys belong in Cloudflare secrets, never in public/");

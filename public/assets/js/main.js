@@ -192,7 +192,7 @@
       if (window.turnstile && widgetId !== null) window.turnstile.reset(widgetId);
     }
 
-    // Short reference like "mailerlite-401", so a failure can be traced without exposing anything sensitive.
+    // Short reference like "brevo-401", so a failure can be traced without exposing anything sensitive.
     function errorCode(httpStatus, body) {
       var stage = typeof body.stage === "string" ? body.stage.replace(/[^a-z]/g, "").slice(0, 20) : "";
       var code = typeof body.status === "number" ? body.status : httpStatus;

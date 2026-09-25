@@ -86,18 +86,21 @@ Before every push: `node scripts/preflight.mjs --launch` must print OK.
 
 ## 6. Free Spotter Card signup: connected, waiting for the first live test
 
-**Decisions taken:** MailerLite, single opt-in, Cloudflare Turnstile, card delivered as a Google Drive "anyone with the link" download (sharing accepted; PDF never in the repo). Email copy is in `emails/spotter-card-sequence.md`.
+**Decisions taken:** Brevo, single opt-in, Cloudflare Turnstile, card delivered as a Google Drive "anyone with the link" download (sharing accepted; PDF never in the repo). Email copy is in `emails/spotter-card-sequence.md`.
 
-**Done ✅ / 🟡**
-- ✅ Form posts to `/api/subscribe` (`worker/subscribe.js`, routed by `worker/index.js`): same-origin check, Turnstile check, then MailerLite group. 16 tests pass (`node scripts/test-subscribe.mjs`). Turnstile verified in a browser under the CSP with Cloudflare's test keys.
-- 🟡 MailerLite: account, group "Spotter Card", API token, automation (joins group, Email 1 now, 3-day delay, Email 2) built and switched on by you. Sending domain `taghunterhq.com` authenticated via Cloudflare (DKIM CNAME, verification TXT, merged SPF); MailerLite showed "Wait to activate" (up to 24h).
-- ✅ Secrets `MAILERLITE_API_KEY`, `MAILERLITE_GROUP_ID`, `TURNSTILE_SECRET` are live on the Worker. **Lesson:** adding them in the dashboard's Variables and Secrets box did NOT reach the running Worker (no version was created). They were set with `npx wrangler secret put NAME` instead, which deploys at once. If you ever rotate one, use the same command. Turnstile site key is in `index.html`.
+**History:** the first provider, MailerLite, suspended the new account automatically within hours, so we switched to Brevo. Kit's free plan lost automations on 3 Sep 2026, so it was ruled out.
 
-**Still open ⏳**
-- Push to deploy, then sign up with your own address on the live site. Check Email 1 arrives, the card link opens, and Email 2 follows (test once with a short delay, then set it back to 3 days).
-- Confirm MailerLite shows the sending domain as active. Until then emails may not send from `support@taghunterhq.com`.
-- The SPF record is now `v=spf1 include:_spf.mx.cloudflare.net a mx include:_spf.mlsend.com ~all`. When you set up Gmail "Send mail as", add `include:_spf.google.com` to this same record (never a second SPF record).
+**Done**
+- Form posts to `/api/subscribe` (`worker/subscribe.js`, routed by `worker/index.js`): same-origin check, Turnstile check, then adds the address to the Brevo list. 17 tests pass (`node scripts/test-subscribe.mjs`).
+- Brevo: domain authenticated, sender `support@taghunterhq.com` verified, list `Spotter Card` (ID 3), automation switched on (Email 1 now, 3-day wait, Email 2), re-entry off.
+- Worker secrets `BREVO_API_KEY`, `BREVO_LIST_ID`, `TURNSTILE_SECRET` set with `npx wrangler secret put`. **Lesson:** secrets typed into the dashboard's Variables and Secrets box did NOT reach the running Worker. Use the wrangler command (and `wrangler login`/`logout` around it), also when rotating.
+- Old MailerLite secrets deleted from the Worker. **Leftovers to clean up:** the MailerLite DNS records in Cloudflare (DKIM CNAME `litesrv._domainkey`, TXT `mailerlite-domain-verification`, and `include:_spf.mlsend.com` in the SPF record) and the MailerLite account.
+
+**Still open**
+- First real signup on the live site: check Email 1 arrives, the card link opens, and (3 days later) Email 2.
+- SPF: Brevo does not need an SPF change. When you set up Gmail "Send mail as", add `include:_spf.google.com` to the single SPF record (never a second one).
 - Optional: Cloudflare rate-limiting rule for `/api/subscribe`.
+- Cloudflare is injecting its Web Analytics beacon; the CSP blocks it (a harmless console error). Either turn that off in Cloudflare or allow it and update the Privacy page.
 
 ## 7. Other open items
 

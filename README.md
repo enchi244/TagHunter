@@ -12,7 +12,7 @@ public/            <- the ONLY folder that gets deployed (Cloudflare "build outp
   assets/            css, js, self-hosted fonts, images (logo, book cover, page previews)
 worker/            Cloudflare Worker code: index.js routes /api/*, subscribe.js is the Spotter Card signup. Deployed with the site
 wrangler.jsonc     Worker config: serves public/ as static assets, runs the Worker only for /api/*
-emails/            reference copy of the Spotter Card emails + MailerLite setup checklist (never deployed)
+emails/            reference copy of the Spotter Card emails + Brevo setup notes (never deployed)
 scripts/           dev server, preflight checker, subscribe tests (never deployed)
 ```
 
@@ -33,15 +33,15 @@ The live project is a Cloudflare **Worker with static assets** ("Workers Builds"
 1. **Checkout URL.** Three buttons in `public/index.html` use `https://YOUR-STORE.lemonsqueezy.com/checkout/buy/YOUR-PRODUCT-UUID`.
    Replace all three with your real Lemon Squeezy checkout link (Share > Checkout Overlay). Keep `class="lemonsqueezy-button"`.
 2. **Support email.** `support@taghunterhq.com` is an assumed address (pages, `security.txt`). Change it or create it.
-3. **Email capture (MailerLite + Turnstile).** The Spotter Card form posts to our own `/api/subscribe`
+3. **Email capture (Brevo + Turnstile).** The Spotter Card form posts to our own `/api/subscribe`
    (`worker/subscribe.js`, called from `worker/index.js`; the site runs on a Cloudflare Worker with static assets). It checks a Cloudflare Turnstile token, then adds the
-   address to a MailerLite group; a MailerLite automation on that group sends the card and the follow-up
-   (copy in `emails/spotter-card-sequence.md`, which also has the MailerLite setup checklist).
+   address to a Brevo list; a Brevo automation on that list sends the card and the follow-up
+   (copy in `emails/spotter-card-sequence.md`, which also has the Brevo setup checklist).
    To switch it on:
    - Cloudflare > Turnstile > add a widget for `taghunterhq.com`. Put the **site key** (public) in `data-sitekey` on the form in `public/index.html`
      (replacing `YOUR-TURNSTILE-SITE-KEY`).
    - Cloudflare > Workers & Pages > the `taghunter` Worker > Settings > Variables and Secrets, add as **Secrets**:
-     `MAILERLITE_API_KEY`, `MAILERLITE_GROUP_ID`, `TURNSTILE_SECRET`. Redeploy after adding them.
+     `BREVO_API_KEY`, `BREVO_LIST_ID`, `TURNSTILE_SECRET`. **Set them with `npx wrangler secret put NAME`** (run `npx wrangler login` first, `npx wrangler logout` after). Secrets typed into the dashboard's Variables and Secrets box did not reach the running Worker for this project.
    Never put a secret in `public/` or in the repo: `preflight` fails on key-shaped strings in `public/`.
    Local testing: put the same three names in a git-ignored `.dev.vars` file (`NAME=value` per line); `dev-server.mjs` runs the handler. `npx wrangler dev` runs the real Worker locally.
    Cloudflare's Turnstile test keys (site `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`) always pass.
@@ -67,7 +67,7 @@ The live project is a Cloudflare **Worker with static assets** ("Workers Builds"
 | No third-party fonts/CDNs/trackers | Fonts are self-hosted; the only external script is Lemon Squeezy's. |
 | Thank-you page | `noindex`, `no-store`, no-referrer. |
 | Cache safety | CSS/JS use `no-cache` so a deploy never mixes new HTML with old styles. |
-| Email form | Client validation, honeypot, too-fast-submit trap, Cloudflare Turnstile (loaded only when the form is used), 10s timeout, `credentials: omit`, output via `textContent` only. Server side (`/api/subscribe`): same-origin check, JSON-only, body size cap, email re-validated, Turnstile token verified, MailerLite key kept in a Cloudflare secret, errors logged without the address. Tested by `node scripts/test-subscribe.mjs`. |
+| Email form | Client validation, honeypot, too-fast-submit trap, Cloudflare Turnstile (loaded only when the form is used), 10s timeout, `credentials: omit`, output via `textContent` only. Server side (`/api/subscribe`): same-origin check, JSON-only, body size cap, email re-validated, Turnstile token verified, Brevo key kept in a Cloudflare secret, errors logged without the address. Tested by `node scripts/test-subscribe.mjs`. |
 | `preflight.mjs` | Blocks deploys that add inline scripts/handlers/styles, unknown script hosts, broken links, missing headers, or a PDF in the web root. |
 | `security.txt`, robots, sitemap | Disclosure contact; thank-you kept out of search. |
 
