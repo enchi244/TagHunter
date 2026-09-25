@@ -595,6 +595,7 @@ h3 { font: 800 17px/1.3 var(--font-body); }
 .guide h2 { margin-top: 38px; font-size: 22px; }
 .guide h3 { margin: 0 0 4px; font: 800 17px/1.3 var(--font-body); }
 .guide .rule { margin-top: 0; }
+.guide ul + p { margin-top: 12px; }
 .guide .unconfirmed { display: block; margin: 14px 0 0; }
 .guide .unconfirmed + p { margin-top: 14px; }
 .guide .wont { margin-top: 20px; }
@@ -618,6 +619,7 @@ h3 { font: 800 17px/1.3 var(--font-body); }
 .sig { display: grid; grid-template-columns: 92px 1fr; gap: 16px; align-items: start; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--tan); }
 .sig__demo { min-width: 0; }
 .sig__demo .stk { display: grid; width: 92px; min-width: 0; height: 46px; padding: 0; font-size: 24px; }
+.sig--guide .stk { font-size: 20px; }
 .sig__cap { display: block; margin-top: 6px; font: 500 10px/1.2 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; text-align: center; color: var(--ink-soft); }
 .sig__demo--stack { position: relative; height: 66px; }
 .sig__demo--stack .stk { position: absolute; width: 80px; }
