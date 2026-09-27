@@ -11,8 +11,9 @@
   # - Cloudflare Web Analytics (cookieless visit counts, injected by Cloudflare): script from
   #   static.cloudflareinsights.com, reports to cloudflareinsights.com (the only connect-src exception).
   # Google Analytics (GA4): gtag.js loads from googletagmanager.com; it reports hits to
-  # google-analytics.com and its regional subdomains (connect-src, no extra script tag needed).
-  Content-Security-Policy: default-src 'none'; script-src 'self' https://assets.lemonsqueezy.com https://challenges.cloudflare.com https://static.cloudflareinsights.com https://www.googletagmanager.com; style-src 'self'; style-src-elem 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self' https://cloudflareinsights.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com; frame-src https://*.lemonsqueezy.com https://challenges.cloudflare.com; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; manifest-src 'self'; upgrade-insecure-requests
+  # google-analytics.com and its regional subdomains (connect-src). It also pings a couple of
+  # googletagmanager.com/a and /td image-beacon URLs (tag health / linking), hence the img-src entry.
+  Content-Security-Policy: default-src 'none'; script-src 'self' https://assets.lemonsqueezy.com https://challenges.cloudflare.com https://static.cloudflareinsights.com https://www.googletagmanager.com; style-src 'self'; style-src-elem 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; img-src 'self' https://www.googletagmanager.com; font-src 'self'; connect-src 'self' https://cloudflareinsights.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com; frame-src https://*.lemonsqueezy.com https://challenges.cloudflare.com; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; manifest-src 'self'; upgrade-insecure-requests
   # Force HTTPS for a year. (Add "; preload" only once every subdomain is HTTPS-only.)
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Content-Type-Options: nosniff
