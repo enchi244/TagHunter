@@ -40,7 +40,7 @@ for (const f of htmlFiles) {
   // 5. Script/stylesheet origins must be on the CSP allowlist.
   for (const m of src.matchAll(/<(?:script|link)\b[^>]*(?:src|href)=["'](https?:)?\/\/([^/"']+)/gi)) {
     const host = m[2];
-    if (host !== "assets.lemonsqueezy.com" && host !== "challenges.cloudflare.com" && !/rel=["']canonical/.test(m[0]) && !/rel=["'](?:canonical|alternate)/.test(m[0])) {
+    if (host !== "assets.lemonsqueezy.com" && host !== "challenges.cloudflare.com" && host !== "www.googletagmanager.com" && !/rel=["']canonical/.test(m[0]) && !/rel=["'](?:canonical|alternate)/.test(m[0])) {
       if (/<script/i.test(m[0]) || /stylesheet|preload/.test(m[0])) fail(f, `loads from ${host}, which the CSP does not allow`);
     }
   }

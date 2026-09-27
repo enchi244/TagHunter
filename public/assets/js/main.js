@@ -32,7 +32,9 @@
 
     document.addEventListener("click", function (e) {
       var a = e.target && e.target.closest ? e.target.closest("a.lemonsqueezy-button") : null;
-      if (a && desktop.matches) e.stopPropagation(); // default navigation still happens
+      if (!a) return;
+      if (window.gtag) window.gtag("event", "buy_click", { link_url: a.getAttribute("href") || "" });
+      if (desktop.matches) e.stopPropagation(); // default navigation still happens
     }, true);
   })();
 
@@ -217,6 +219,7 @@
         if (res.ok) {
           say("Sent! Check your inbox for the Spotter Card. If you don't see it, look in Promotions or All Mail.", "ok");
           form.reset();
+          if (window.gtag) window.gtag("event", "spotter_signup");
           return;
         }
         return res.json().catch(function () { return {}; }).then(function (body) {
