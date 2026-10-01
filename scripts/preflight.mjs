@@ -23,12 +23,15 @@ function walk(dir) {
 const files = walk(ROOT);
 const htmlFiles = files.filter((f) => f.endsWith(".html"));
 
+// The one inline script we allow: Lemon Squeezy's affiliate config. The CSP permits it by hash.
+const AFF_CONFIG = 'window.lemonSqueezyAffiliateConfig = { store: "taghunterhq" };';
+
 for (const f of htmlFiles) {
   const src = readFileSync(f, "utf8");
 
   // 1. Inline <script> (script with no src). JSON data blocks are allowed.
   for (const m of src.matchAll(/<script\b([^>]*)>/gi)) {
-    if (!/\bsrc=/.test(m[1]) && !/type=["']application\/(ld\+)?json["']/.test(m[1])) fail(f, "inline <script> (blocked by CSP)");
+    if (!/\bsrc=/.test(m[1]) && !/type=["']application\/(ld\+)?json["']/.test(m[1]) && !src.includes(`<script>${AFF_CONFIG}</script>`)) fail(f, "inline <script> (blocked by CSP)");
   }
   // 2. Inline event handlers: onclick=, onload=, ...
   if (/\son[a-z]+\s*=\s*["']/i.test(src.replace(/<!--[\s\S]*?-->/g, ""))) fail(f, "inline event handler attribute (blocked by CSP)");
@@ -40,7 +43,7 @@ for (const f of htmlFiles) {
   // 5. Script/stylesheet origins must be on the CSP allowlist.
   for (const m of src.matchAll(/<(?:script|link)\b[^>]*(?:src|href)=["'](https?:)?\/\/([^/"']+)/gi)) {
     const host = m[2];
-    if (host !== "assets.lemonsqueezy.com" && host !== "challenges.cloudflare.com" && host !== "www.googletagmanager.com" && !/rel=["']canonical/.test(m[0]) && !/rel=["'](?:canonical|alternate)/.test(m[0])) {
+    if (host !== "assets.lemonsqueezy.com" && host !== "challenges.cloudflare.com" && host !== "www.googletagmanager.com" && host !== "lmsqueezy.com" && !/rel=["']canonical/.test(m[0]) && !/rel=["'](?:canonical|alternate)/.test(m[0])) {
       if (/<script/i.test(m[0]) || /stylesheet|preload/.test(m[0])) fail(f, `loads from ${host}, which the CSP does not allow`);
     }
   }
