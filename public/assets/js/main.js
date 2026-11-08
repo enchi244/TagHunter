@@ -5,7 +5,6 @@
   "use strict";
 
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var pageLoadedAt = Date.now();
 
   /* ---------- Checkout: overlay on phones/tablets, full Lemon Squeezy page on desktop ----------
      Each buy button is a normal link. Its href is the overlay link (lemon.js turns the click into
@@ -246,9 +245,8 @@
         return;
       }
 
-      // Bots: filled honeypot, or submitted faster than a human can type.
-      // Pretend it worked so they learn nothing.
-      if ((trap && trap.value) || Date.now() - pageLoadedAt < 2500) {
+      // Bots: filled honeypot. Pretend it worked so they learn nothing.
+      if (trap && trap.value) {
         say("Sent! Check your inbox for the Spotter Card. If you don't see it, look in Promotions or All Mail.", "ok");
         form.reset();
         return;
